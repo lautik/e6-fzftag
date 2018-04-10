@@ -38,9 +38,15 @@ if [ "$1" = -s ]; then
 fi
 
 
+
 function fzfsel ()
 {
-  fzf -m --ansi --nth 1 "$@" < $DB | cut -f 1 -d ' ' |tr \\n ' '
+# XXX if the user adjusts preview window size, the
+# '50% of terminal width' wrapping size will be wrong. Probably need to detect and parse it!
+
+  COLS=$(tput cols)
+  COLS=$((COLS/2))
+  fzf -m --ansi --nth 1 --preview "printf '%s\n' {+1} |sort | tr \\n ' ' |fold -s -w $COLS" "$@" < $DB | cut -f 1 -d ' ' |tr \\n ' '
 }
 
 function stripcolor ()
@@ -71,4 +77,4 @@ function docopy ()
 }
 
 
-fzfsel | stripcolor | docopy
+fzfsel "$@" | stripcolor | docopy
