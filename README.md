@@ -71,7 +71,11 @@ Before running `ft` for the first time, you *must* run `ft-updatedb` once. It ma
 `ft-updatedb` on subsequent occasions, to get any new popular tags from e621, but this is certainly
 not required. If you need to force an update at any time, you can use the `-f` option: `ft-updatedb -f`
 
-ft may be invoked simply as `ft`, with no arguments. Any additional arguments provided will be passed on to fzf.
+ft may be invoked simply as `ft`, with no arguments.
+`ft -s` skips the final 'copy to clipboard' step, outputting the selected tags directly. This is
+useful with command substitution, eg `tags=$(ft -s)`.
+
+Any other arguments provided will be passed on to fzf.
 For example, you can reduce the number of terminal lines occupied by the fzf query like this:
    `ft --height=10`
 (or via the `FZF_DEFAULT_OPTS` environment variable, which is documented by the fzf man page.)

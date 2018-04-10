@@ -6,20 +6,47 @@
 #
 # ft is intended to be used in conjunction with your browser or image viewer of choice.
 #
-# Any arguments passed to 'ft' will be passed on to 'fzf'.
+# If the first argument is '-s', then the final step of copying will be skipped.
+# `ft -s` is intended for use with command substitutions in scripts, eg 'TAGS=$(ft -s)`
+#
+# Any other arguments passed to 'ft' will be passed on to 'fzf'.
 #
 # For example, you can reduce the number of terminal lines occupied by the fzf query like this:
 #   `ft --height=10`
 # (or via the FZF_DEFAULT_OPTS environment variable, which is documented by the fzf man page.)
 #
+#
+# TODO:
+#
+#  * allow a list of tags that should be preselected to be passed in on stdin.
+#
+
 
 
 DB=~/.cache/e621-fzftags
+AUTOCOPY=1
+
 
 if ! [ -f "$DB" ]; then
   echo "Missing database $DB. You need to generate it using 'updatedb'"
   exit 1
 fi
+
+if [ "$1" = -s ]; then
+  AUTOCOPY=
+  shift 1
+fi
+
+
+function fzfsel ()
+{
+  fzf -m --ansi --nth 1 "$@" < $DB | cut -f 1 -d ' ' |tr \\n ' '
+}
+
+function stripcolor ()
+{
+  sed -e "s,"$'\e'"\[[0-9;]+m,,g"
+}
 
 # xsel note:
 #
@@ -34,4 +61,14 @@ fi
 # '-s' to output to SECONDARY clipboard (no idea what this is. Maybe KDE/Gnome use it?)
 #
 
-fzf -m --ansi --nth 1 "$@" < $DB | cut -f 1 -d ' ' |tr \\n ' ' | sed -e "s,"$'\e'"\[[0-9;]+m,,g" | xsel -i -b
+function docopy ()
+{
+   if [ -n "$AUTOCOPY" ]; then
+     xsel -i -b
+   else
+     cat -
+   fi
+}
+
+
+fzfsel | stripcolor | docopy
