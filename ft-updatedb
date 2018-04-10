@@ -1,0 +1,120 @@
+#!/bin/sh
+
+# get all tags with count >= 100
+# render a tabulated plain-text list TAG NTAGGINGS for feeding into `fzf -m --ansi --nth 1`
+#
+# (the output of the above command should usually be filtered through `cut -d ' ' -f 1` to select only the
+#  tags, and remove the counts)
+#
+#
+# Requirements:
+#
+#  jq
+#  curl
+#  coreutils
+#  sed
+#
+#
+# Options:
+#
+#  -f / --force :  Force database update regardless of freshness of database
+#
+
+VERSION=0.2
+AGENTNAME="Tag-db compiler for fzf, v$VERSION"
+# tags with tagging count < TAGCOUNTTHRESHOLD are ignored
+TAGCOUNTTHRESHOLD=100
+
+function taggedenough
+{
+  # return only entries for tags which have tagging count >= 100
+  jq ".[] | select(.count >= $TAGCOUNTTHRESHOLD)"
+}
+
+function colortags
+{
+  # REFERENCE: https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
+  #
+  # Note that all color codes are indexes into your terminal color palette; it is possible that
+  # your terminal colors are configured to map the below codes to colors different from the ones
+  # named below.
+  #
+  # rules:
+  #  general [t=0] = no color
+  #  species [t=2]= 31 (red)
+  #  copyright [t=3] = 35 (purple)
+  #  artist [t=1] = 33 (orange/yellow)
+  #  character [t=4] = 32 (green)
+
+  # -> the following lookup table
+  DATA='{"0":"0", "1":"33", "2":"31", "3":"35", "4":"32"}'
+
+  # Generate an output in which U+2020 † is a placeholder for escape.
+  # (I'm not sure whether 0x1b / \e (escape) is a valid character in JSON, but I haven't figured
+  # out how to get jq to directly produce it yet)
+  jq --argjson color "$DATA" '[.] | map(.name="†[" + $color[.type | tostring] + "m" + .name + "†[0m") | .[] '
+
+}
+
+URL='https://e621.net/tag/index.json?limit=500&order=count'
+DONE=
+TMP=/tmp/fzftags-db
+DEST=~/.cache/e621-fzftags
+INDEX=0
+METER=
+
+LASTUPDATE=$(date +%s -r "$DEST" || echo 0)
+NOW=$(date +%s)
+DIFF=$((NOW-LASTUPDATE))
+
+# Expire after 4 weeks
+THRESHOLD=$((60*60*24*7*4))
+if [ -n "$1" ]; then
+  for arg; do
+    case "$arg" in
+      -f ) ;&
+      --force ) echo "Force-update due to user request"; DIFF=$((THRESHOLD+1));;
+      * ) echo "Unknown option '$arg', ignoring";;
+    esac
+  done
+fi
+
+if [ "$DIFF" -lt "$THRESHOLD" ]; then
+  DONE=1
+  echo 'Skipping update, cache is fresh enough'
+  exit 0
+fi
+
+echo 'Phase 1: Fetching tag data from e621'
+
+# Keep looping until the latest JSON returns no tags possessing a count >=100.
+#
+# Accumulate a numbered series of json files, including only tags with count >= 100
+while [ -z "$DONE" ]; do
+  INDEX=$((INDEX+1))
+  OFILE=$(printf "%s-%03d.json" "$TMP" "$INDEX")
+  if [ "$INDEX" -gt 1 ]; then
+    sleep 3
+  fi
+  echo "$URL&page=$INDEX"
+  curl --user-agent "$AGENTNAME" "$URL&page=$INDEX"  > /tmp/fzffoo
+  taggedenough < /tmp/fzffoo > "$OFILE"
+  OKLINES=$(jq -s 'length' < "$OFILE")
+  if [ "$OKLINES" -eq 0 ]; then
+    DONE=$((INDEX*500))
+    METER="$METER! (~$DONE tags fetched)"
+  else
+    METER="$METER."
+  fi
+  printf '%s\n' "$METER"
+done
+
+
+# Apply color, tabulate, and output
+echo "Phase 2: Formatting data for fzf"
+cat "$TMP-"* | colortags > /tmp/colortags
+jq < /tmp/colortags -rs 'foreach .[] as $v ([];@text "\($v.name)\t\($v.count)")' \
+ | column -t --output-separator $'\t' |sed -Ee s,†,$'\e',g > "$DEST" && echo "Database written to : $DEST" && \
+ rm "$TMP-"* /tmp/colortags /tmp/fzffoo && exit 0
+
+echo "Error. Check /tmp/fzffoo or /tmp/colortags for evidence."
