@@ -96,3 +96,20 @@ A quickstart guide to fzf, which should be augmented by viewing the fzf man page
 * `Cursor Keys`	Move through options
 * `Ctrl-n/p`	Equivalent to down key and up key respectively
 * `PgUp/PgDn`	Move through options a page at a time
+
+
+TODO
+-----
+
+* Read existing post tags and preselect those tags. Unsure whether fzf supports preselected tags,
+  though. Should at least be able to remove already-applied tags
+
+Won't Do
+---------
+
+Most of these things are in the area of "too individual to have a general solution".
+
+* Global keybind for semi-integration with browser: Should be done via a terminal with
+   'console'/'slide-down' support (eg.Guake, Tilda), and something like bindkey or sxhkd.
+   a) not gonna depend on a specific terminal, and b) would prefer to get lhtag, my
+    lighthouse-based tagging interface, released, in preference to this kind of hack.
