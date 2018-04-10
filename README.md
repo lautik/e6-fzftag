@@ -39,8 +39,9 @@ The following programs should be installed:
 * [jq](https://github.com/stedolan/jq)
 * [curl](https://curl.haxx.se/)
 * [fzf](https://github.com/junegunn/fzf)
+* xsel
 
-`jq` and `curl` are probably available in your package manager. `fzf` is available as a package for
+`jq`, `xsel`, and `curl` are probably available in your package manager. `fzf` is available as a package for
 Fedora; for other distros, you may need to install from git. Instructions are in the fzf link
 above.
 
