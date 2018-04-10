@@ -43,10 +43,17 @@ function fzfsel ()
 {
 # XXX if the user adjusts preview window size, the
 # '50% of terminal width' wrapping size will be wrong. Probably need to detect and parse it!
+#
+# Specific shell is enforced here because it's pretty difficult to write a command portable
+# between sh/bash/zsh/fish/etc.
 
   COLS=$(tput cols)
-  COLS=$((COLS/2))
-  fzf -m --ansi --nth 1 --preview "printf '%s\n' {+1} |sort | tr \\n ' ' |fold -s -w $COLS" "$@" < $DB | cut -f 1 -d ' ' |tr \\n ' '
+  COLS=$(((COLS/2)-4))
+  SHELL=/bin/sh
+  if [ -f /bin/dash ]; then
+    SHELL=/bin/dash
+  fi
+  fzf -m --ansi --nth 1 --preview "printf '%s\n' {+1} |sort | tr \\\n ' ' |fold -s -w $COLS" "$@" < $DB | cut -f 1 -d ' ' |tr \\n ' '
 }
 
 function stripcolor ()
