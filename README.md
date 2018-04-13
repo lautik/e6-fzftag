@@ -24,6 +24,9 @@ installation:
   should be generally appropriate, but you may prefer `-p` (PRIMARY) or `-s` (SECONDARY) instead.
 
 
+It should also be noted that any general configuration of `fzf` you have made via the environment variable `FZF_DEFAULT_OPTS` is explicitly respected (eg. `ft` binds `alt-e` key combination, but if you also bound it, it won't override the `alt-e` binding)
+
+
 Requirements
 -------------
 
@@ -88,9 +91,12 @@ efficiently, just learn more about how to use *fzf*.
 A quickstart guide to fzf, which should be augmented by viewing the fzf man page, particularly the KEY BINDINGS and EXTENDED SEARCH MODE sections:
 
 * Typing most normal keys -- a-z, A-Z, 0-9, space, backspace, etc.. -- edits the current query. The query is used to find particular items. Do not confuse the query (what you are currently searching for) with the selection (the particular items you have already selected with `Tab`, typically shown with a `>` character to their left.)
-* `Tab`	Toggle selection of the current tag
-        (ie. select it if it isn't selected; deselect it if it is)
+* `Tab`	Toggle selection of the current tag, then (ft-specific override) erase query and move down in the results list
+        (ie. select the item if it isn't selected; deselect it if it is).
+        The 'vanilla' behaviour of fzf is only to toggle selection of the current tag.
 * `Ctrl-k`	Kill(erase) last word from query. eg `blue eye<Ctrl-k>` -> `blue`
+* `Ctrl-a` / `Ctrl-e`	Go to beginning of query string or end of query string respectively (also
+                accessible via Home, End)
 * `Enter`	Confirm selection and exit.
 * `Escape`  Cancel and exit (returns an empty selection, ie. no tags)
 * `Cursor Keys`	Move through options
@@ -112,8 +118,21 @@ your bind takes precedence.
 TODO
 -----
 
+* Database updates should be suggested - but not enforced -- if `ft` finds your database is old
+  enough.
+
+* Support enumeration-type metatags, eg 'rating:(s|q|e)'
+  (it's possible to support ID-types like `pool:1234` , but this requires more work DB-building
+   -- fetch at least the highest-used-pool-ID, but preferably all the pool names as well,
+   so the user has confirmation the ID used is correct.)
+    * Arbitrary-content metatags like `source:` will never be supported.
+
+    * Tag type changing (`character:foo`) also won't be supported.
+
+    * The removal of tags (`-foo`) may at some time in the future be supported.
+
 * Read existing post tags and preselect those tags. Unsure whether fzf supports preselected tags,
-  though. Should at least be able to remove already-applied tags
+  though. Should at least be able to remove already-applied tags.
 
 Won't Do
 ---------
