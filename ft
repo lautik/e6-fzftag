@@ -71,15 +71,27 @@ fzfsel ()
   #
   # It may be possible to hack something together with sed..
   ALTEBIND='--bind=alt-e:execute(xdg-open http://e621.net/wiki/show/{1}&)'
+  TABBIND='--bind=tab:toggle+unix-line-discard+page-down'
+  TIEBREAK='--tiebreak=start'
   # approximate don't-override-defined-keybinding check.
   # Should not cause false negatives, but false positives are possible.
   #
   # you may want to override, for example if you want to use mimeo rather than xdg-open.
-  if printf '%s\n' "$FZF_DEFAULT_OPTS" | grep -Ee 'alt-e:[^,]+' > /dev/null; then
+  if printf '%s\n' "$FZF_DEFAULT_OPTS" | grep -Ee 'bind.+alt-e:[^,]+' > /dev/null; then
     ALTEBIND=''
   fi
 
-  fzf -m --ansi --nth 1 $ALTEBIND --preview "printf '%s\n' {+1} |sort | tr \\\n ' ' |fold -s -w $COLS" "$@" < $DB | cut -f 1 -d ' ' |tr \\n ' '
+  if printf '%s\n' "$FZF_DEFAULT_OPTS" | grep -Ee 'bind.+tab:[^,]+' > /dev/null; then
+    TABBIND=''
+  fi
+
+  if printf '%s\n' "$FZF_DEFAULT_OPTS" | grep -e '--tiebreak' > /dev/null; then
+    TIEBREAK=''
+  fi
+
+  fzf -m --ansi --nth 1 $TABBIND $ALTEBIND $TIEBREAK \
+   --preview "printf '%s\n' {+1} |sort | tr \\\n ' ' |fold -s -w $COLS" \
+   "$@" < $DB | cut -f 1 -d ' ' |tr \\n ' '
   unset IFS
 }
 
