@@ -87,6 +87,7 @@ fi
 
 echo 'Phase 1: Fetching tag data from e621'
 
+JSONFILES=
 # Keep looping until the latest JSON returns no tags possessing a count >=100.
 #
 # Accumulate a numbered series of json files, including only tags with count >= 100
@@ -106,15 +107,16 @@ while [ -z "$DONE" ]; do
   else
     METER="$METER."
   fi
+  JSONFILES="$JSONFILES $OFILE"
   printf '%s\n' "$METER"
 done
 
 
 # Apply color, tabulate, and output
 echo "Phase 2: Formatting data for fzf"
-cat "$TMP-"* | colortags > /tmp/colortags
+cat $JSONFILES | colortags > /tmp/colortags
 jq < /tmp/colortags -rs 'foreach .[] as $v ([];@text "\($v.name)\t\($v.count)")' \
  | column -t --output-separator $'\t' |sed -Ee s,†,$'\e',g > "$DEST" && echo "Database written to : $DEST" && \
- rm "$TMP-"* /tmp/colortags /tmp/fzffoo && exit 0
+ rm $JSONFILES /tmp/colortags /tmp/fzffoo && exit 0
 
-echo "Error. Check /tmp/fzffoo or /tmp/colortags for evidence."
+echo "Unknown error. Check /tmp/fzffoo or /tmp/colortags for evidence."
