@@ -27,6 +27,8 @@ DB=~/.cache/e621-fzftags
 AUTOCOPY=1
 
 
+# XXX local alias support aka 'quicktags'?
+
 # XXX prompt user to build DB if it isn't found
 
 if ! [ -f "$DB" ]; then
@@ -58,10 +60,27 @@ fzfsel ()
   COLS=$(tput cols)
   COLS=$(((COLS/2)-4))
   SHELL=/bin/sh
+
   if [ -f /bin/dash ]; then
     SHELL=/bin/dash
   fi
-  fzf -m --ansi --nth 1 --preview "printf '%s\n' {+1} |sort | tr \\\n ' ' |fold -s -w $COLS" "$@" < $DB | cut -f 1 -d ' ' |tr \\n ' '
+
+  IFS="$(printf '\n')"
+  # XXX won't work for items containing characters that need URL-escaping
+  # eg /, <, >, &, ?
+  #
+  # It may be possible to hack something together with sed..
+  ALTEBIND='--bind=alt-e:execute(xdg-open http://e621.net/wiki/show/{1}&)'
+  # approximate don't-override-defined-keybinding check.
+  # Should not cause false negatives, but false positives are possible.
+  #
+  # you may want to override, for example if you want to use mimeo rather than xdg-open.
+  if printf '%s\n' "$FZF_DEFAULT_OPTS" | grep -Ee 'alt-e:[^,]+' > /dev/null; then
+    ALTEBIND=''
+  fi
+
+  fzf -m --ansi --nth 1 $ALTEBIND --preview "printf '%s\n' {+1} |sort | tr \\\n ' ' |fold -s -w $COLS" "$@" < $DB | cut -f 1 -d ' ' |tr \\n ' '
+  unset IFS
 }
 
 stripcolor ()

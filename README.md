@@ -97,6 +97,17 @@ A quickstart guide to fzf, which should be augmented by viewing the fzf man page
 * `Ctrl-n/p`	Equivalent to down key and up key respectively
 * `PgUp/PgDn`	Move through options a page at a time
 
+Keys which `ft` specifically binds:
+
+* `Alt-e`	Open the e621 wiki page for the currently selected tag -
+                ie. https://e621.net/wiki/show/TAGNAME .
+		Uses whatever xdg-open thinks your default web browser is.
+
+ft tries to avoid clobbering any preexisting binds in your FZF_DEFAULT_OPTS. So if you want to
+`--bind=alt-e:execute(mimeo {1}&)` (supposing you prefer mimeo over xdg-open),
+your bind takes precedence.
+
+
 
 TODO
 -----
