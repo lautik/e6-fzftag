@@ -28,7 +28,13 @@ AUTOCOPY=1
 
 
 if ! [ -f "$DB" ]; then
-  echo "Missing database $DB. You need to generate it using 'updatedb'"
+  echo "Missing database $DB. You need to generate it using 'updatedb'" 1>&2
+  exit 1
+fi
+
+DB_NLINES=$(wc -l < "$DB")
+if [ $DB_NLINES -lt 50 ]; then
+  echo "Database $DB seems too small ($DB_NLINES items). Exiting." 1>&2
   exit 1
 fi
 
