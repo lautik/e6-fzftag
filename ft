@@ -47,7 +47,7 @@ fi
 
 
 
-function fzfsel ()
+fzfsel ()
 {
 # XXX if the user adjusts preview window size, the
 # '50% of terminal width' wrapping size will be wrong. Probably need to detect and parse it!
@@ -64,7 +64,7 @@ function fzfsel ()
   fzf -m --ansi --nth 1 --preview "printf '%s\n' {+1} |sort | tr \\\n ' ' |fold -s -w $COLS" "$@" < $DB | cut -f 1 -d ' ' |tr \\n ' '
 }
 
-function stripcolor ()
+stripcolor ()
 {
   sed -e "s,"$'\e'"\[[0-9;]+m,,g"
 }
@@ -82,7 +82,7 @@ function stripcolor ()
 # '-s' to output to SECONDARY clipboard (no idea what this is. Maybe KDE/Gnome use it?)
 #
 
-function docopy ()
+docopy ()
 {
    if [ -n "$AUTOCOPY" ]; then
      xsel -i -b

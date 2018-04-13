@@ -25,13 +25,13 @@ AGENTNAME="Tag-db compiler for fzf, v$VERSION"
 # tags with tagging count < TAGCOUNTTHRESHOLD are ignored
 TAGCOUNTTHRESHOLD=100
 
-function taggedenough
+taggedenough ()
 {
   # return only entries for tags which have tagging count >= 100
   jq ".[] | select(.count >= $TAGCOUNTTHRESHOLD)"
 }
 
-function colortags
+colortags ()
 {
   # REFERENCE: https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
   #
