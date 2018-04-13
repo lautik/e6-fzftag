@@ -72,7 +72,7 @@ THRESHOLD=$((60*60*24*7*4))
 if [ -n "$1" ]; then
   for arg; do
     case "$arg" in
-      -f ) ;&
+      -f ) echo "Force-update due to user request"; DIFF=$((THRESHOLD+1));;
       --force ) echo "Force-update due to user request"; DIFF=$((THRESHOLD+1));;
       * ) echo "Unknown option '$arg', ignoring";;
     esac
@@ -115,8 +115,10 @@ done
 # Apply color, tabulate, and output
 echo "Phase 2: Formatting data for fzf"
 cat $JSONFILES | colortags > /tmp/colortags
+ESC="$(printf '\33')"
+TAB="$(printf '\11')"
 jq < /tmp/colortags -rs 'foreach .[] as $v ([];@text "\($v.name)\t\($v.count)")' \
- | column -t --output-separator $'\t' |sed -Ee s,†,$'\e',g > "$DEST" && echo "Database written to : $DEST" && \
+ | column -t --output-separator "$TAB" |sed -Ee s,†,"$ESC",g > "$DEST" && echo "Database written to : $DEST" && \
  rm $JSONFILES /tmp/colortags /tmp/fzffoo && exit 0
 
 echo "Unknown error. Check /tmp/fzffoo or /tmp/colortags for evidence."

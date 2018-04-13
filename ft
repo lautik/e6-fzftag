@@ -66,7 +66,8 @@ fzfsel ()
 
 stripcolor ()
 {
-  sed -e "s,"$'\e'"\[[0-9;]+m,,g"
+  ESC="$(printf '\33')"
+  sed -e "s,$ESC\[[0-9;]+m,,g"
 }
 
 # xsel note:
