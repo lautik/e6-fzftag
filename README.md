@@ -129,8 +129,6 @@ TODO
 
     * Tag type changing (`character:foo`) also won't be supported.
 
-    * The removal of tags (`-foo`) may at some time in the future be supported.
-
 * Read existing post tags and preselect those tags. Unsure whether fzf supports preselected tags,
   though. Should at least be able to remove already-applied tags.
 
