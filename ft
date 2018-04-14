@@ -71,7 +71,7 @@ fzfsel ()
   #
   # It may be possible to hack something together with sed..
   ALTEBIND='--bind=alt-e:execute(xdg-open http://e621.net/wiki/show/{1}&)'
-  TABBIND='--bind=tab:toggle+unix-line-discard+page-down'
+  TABBIND='--bind=tab:toggle+unix-line-discard+top'
   TIEBREAK='--tiebreak=begin'
   # approximate don't-override-defined-keybinding check.
   # Should not cause false negatives, but false positives are possible.
