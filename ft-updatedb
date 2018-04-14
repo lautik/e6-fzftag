@@ -28,6 +28,8 @@ TAGCOUNTTHRESHOLD=100
 taggedenough ()
 {
   # return only entries for tags which have tagging count >= 100
+  # XXX a more sophisticated approach -- accept all artist / character / copyright tags with >2 count
+  # , but compare to TAGCOUNTTHRESHOLD for species or general tags, may work better.
   jq ".[] | select(.count >= $TAGCOUNTTHRESHOLD)"
 }
 

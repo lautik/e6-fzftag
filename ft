@@ -25,7 +25,9 @@
 
 DB=~/.cache/e621-fzftags
 AUTOCOPY=1
-
+TAB="$(printf '\t')"
+ESC="$(printf '\e')"
+NEWLINE="$(printf '\n')"
 
 # XXX local alias support aka 'quicktags'?
 
@@ -42,12 +44,14 @@ if [ $DB_NLINES -lt 50 ]; then
   exit 1
 fi
 
-if [ "$1" = -s ]; then
-  AUTOCOPY=
-  shift 1
-fi
-
-
+while true; do
+  case "$1" in
+    -s ) AUTOCOPY=; shift 1;;
+    --stdout ) AUTOCOPY=; shift 1;;
+    --old-tags ) IFS=" $TAB";OLDTAGS="$2";unset IFS;shift 2;;
+    * ) break
+  esac
+done
 
 fzfsel ()
 {
@@ -56,7 +60,6 @@ fzfsel ()
 #
 # Specific shell is enforced here because it's pretty difficult to write a command portable
 # between sh/bash/zsh/fish/etc.
-
   COLS=$(tput cols)
   COLS=$(((COLS/2)-4))
   SHELL=/bin/sh
@@ -65,7 +68,7 @@ fzfsel ()
     SHELL=/bin/dash
   fi
 
-  IFS="$(printf '\n')"
+  IFS="$NEWLINE"
   # XXX won't work for items containing characters that need URL-escaping
   # eg /, <, >, &, ?
   #
@@ -89,9 +92,28 @@ fzfsel ()
     TIEBREAK=''
   fi
 
+  printf '' >  /tmp/fzfsel-oldtags
+  printf '' >  /tmp/fzfsel-oldtags2
+  PREVIEW="printf '%s\n' {+1} | sort | tr \\\n ' ' |fold -s -w $COLS"
+#
+  if [ -n "$OLDTAGS" ]; then
+    IFS=" $TAB"
+    printf '%s\n' $OLDTAGS > /tmp/fzfsel-oldtags
+# width
+    CWIDTH=$(head -1 ~/.cache/e621-fzftags |grep -Eboe "$TAB"'[0-9]')
+    CWIDTH=${CWIDTH%%:*}
+    CWIDTH=$((CWIDTH-1))
+#    echo "CW $CWIDTH" 1>&2
+    OLDTAGS=$(printf "\e[36m-%s\e[0m " $OLDTAGS)
+    printf "%-$CWIDTH"'s\tx\n' $OLDTAGS  > /tmp/fzfsel-oldtags2
+    PREVIEW="printf '%s\n' {+1} | cat /tmp/fzfsel-oldtags - | sort -u | tr \\\n ' ' |fold -s -w $COLS"
+  fi
+
+  IFS="$NEWLINE"
+  cat $DB /tmp/fzfsel-oldtags2 | \
   fzf -m --ansi --nth 1 $TABBIND $ALTEBIND $TIEBREAK \
-   --preview "printf '%s\n' {+1} |sort | tr \\\n ' ' |fold -s -w $COLS" \
-   "$@" < $DB | cut -f 1 -d ' ' |tr \\n ' '
+   --preview "$PREVIEW" \
+   "$@" | cut -f 1 -d ' ' |tr \\n ' '
   unset IFS
 }
 
@@ -99,6 +121,38 @@ stripcolor ()
 {
   ESC="$(printf '\33')"
   sed -e "s,$ESC\[[0-9;]+m,,g"
+}
+
+applyuntags ()
+{
+  read TAGS
+  NEWTAGS=
+  NEG=
+  NORMAL=
+  #echo "before apply, $TAGS" 1>&2
+  for T in $TAGS; do
+    case "$T" in
+     -* ) T=${T#-}
+          if [ -n "$NEG" ]; then
+            NEG="$NEG $T"
+          else
+            NEG="$T"
+          fi;;
+     * )  if [ -n "$NORMAL" ]; then
+            NORMAL="$NORMAL $T"
+          else
+            NORMAL="$T"
+          fi;;
+    esac
+  done;
+  NEWTAGS=$(for T in $NORMAL; do
+     if ! echo "$NEG" | fgrep -we "$T" > /dev/null; then
+       printf '%s ' "$T"
+     fi
+   done)
+  NEWTAGS="${NEWTAGS% }"
+#  echo "after apply, $NEWTAGS" 1>&2
+  echo "$NEWTAGS"
 }
 
 # xsel note:
@@ -124,4 +178,8 @@ docopy ()
 }
 
 
-fzfsel "$@" | stripcolor | docopy
+TAGS=$(fzfsel "$@" | stripcolor)
+TAGS=$(tr \\n ' ' < /tmp/fzfsel-oldtags)"$TAGS"
+echo "$TAGS" | applyuntags | docopy
+
+rm /tmp/fzfsel-oldtags /tmp/fzfsel-oldtags2
